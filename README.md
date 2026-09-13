@@ -149,17 +149,20 @@ knowing:
 `detectable_lift_for_mean()` and `detectable_lift_for_proportion()` run the
 other direction: the sample is fixed, so what can it actually see?
 
-## Example Workflows
+## Learning it
 
-All examples in `examples/` generate their own synthetic data so you can
-clone and run immediately:
+The notebooks live in [research-kit](https://github.com/iasolb/research-kit),
+alongside the two data loaders, because the interesting examples use otter
+together with them rather than on its own.
 
-```bash
-python examples/ols_mincer.py
-python examples/random_forest_churn.py
-python examples/heckman_selection.py
-python examples/monte_carlo_test.py
-```
+Two tracks. **Start here** assumes you have seen pandas once:
+`01-get-set-up` and `02-your-first-question`. **Going further** assumes you
+are partway through a degree: `03-two-sources-one-question` and
+`04-is-the-difference-real`.
+
+They replaced four scripts in `examples/` that each demonstrated one module.
+Those were accurate, and nobody learned anything from them: they showed the
+library rather than a piece of work.
 
 ## Running Tests
 
@@ -179,8 +182,10 @@ pytest tests/test_pond.py::TestTransforms::test_z_score -v
 
 ## Start here
 
-Run one of the example workflows in `examples/`: `ols_mincer.py` is the
-shortest path to seeing the framework end to end.
+`02-your-first-question` in
+[research-kit/notebooks](https://github.com/iasolb/research-kit/tree/main/notebooks)
+is the shortest path to seeing this work end to end: it goes from a vague
+thought to a regression you can read.
 
 ---
 
@@ -204,17 +209,15 @@ otter/
 │   ├── transforms.py      # Reusable single- and multi-column transforms
 │   ├── simulation.py      # Monte Carlo simulation module
 │   └── plotter.py         # Plotly plotting for simulation results
-├── tests/
-│   ├── test_pond.py       # Pond and transforms, on synthetic data
-│   └── test_experiment.py # design, assignment, lift, CUPED, balance
-└── examples/
-    ├── data/
-    │   └── startup_portfolio.csv      # generated on first run, not committed
-    ├── ols_mincer.py                  # OLS Mincer wage equation
-    ├── random_forest_churn.py         # Random forest churn prediction
-    ├── heckman_selection.py           # Heckman two-step selection model
-    └── monte_carlo_test.py            # Monte Carlo portfolio valuation
+└── tests/
+    ├── test_pond.py       # Pond and transforms, on synthetic data
+    └── test_experiment.py # design, assignment, lift, CUPED, balance
 ```
+
+Teaching material is not here: it lives in
+[research-kit/notebooks](https://github.com/iasolb/research-kit/tree/main/notebooks),
+because every example worth reading uses this library together with the two
+data loaders.
 
 ## Pond API
 

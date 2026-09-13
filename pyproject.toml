@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "otter"
-version = "0.1.1"
+version = "0.1.2"
 description = "A lightweight pandas-based framework for research workflows: dataset management with tracked model specifications, reusable column transforms, and a Monte Carlo simulation module for uncertainty analysis."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -34,3 +34,15 @@ plots = ["kaleido>=0.2"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+# SHIP THE TYPES (PEP 561). Without py.typed inside the installed package, a
+# type checker and an editor both IGNORE every annotation in this library and
+# treat it as untyped, so autocomplete gives you nothing and mypy reports it as
+# missing stubs. The annotations were already here; nothing told anyone to use
+# them.
+#
+# No .pyi stub files, deliberately. Stubs would restate every signature in a
+# second file that then drifts from the first, and this package is annotated
+# inline already. One home for one fact.
+[tool.setuptools.package-data]
+otter = ["py.typed"]
