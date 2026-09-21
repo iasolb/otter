@@ -154,10 +154,70 @@ _LOADER_REG = {
 }
 
 
+def _to_frame(obj: Any) -> Optional[pd.DataFrame]:
+    """Any in-memory tabular object -> a DataFrame, or None if it is not one.
+
+    Returning None is a REAL answer, distinct from an empty table, and the
+    caller must not coerce it: "this is not tabular" and "this is an empty
+    table" are different facts and the error message depends on which.
+
+    ORDERED BY HOW MUCH SURVIVES THE TRIP, not by how popular the library is.
+    Arrow first, because it carries nulls, strings and nested types that a
+    naive row conversion drops; the interchange protocol last among the
+    protocols, because it is the slowest and most lossy of them.
+
+    WHAT THIS DOES NOT DO, stated here because the name invites the wrong
+    expectation: it MATERIALISES. Handing this a query result over a very
+    large remote table will pull the whole thing into memory. Making Pond
+    lazy is a different change, in the operations rather than the door.
+    """
+    if obj is None:
+        return None
+    if isinstance(obj, (pd.DataFrame, gpd.GeoDataFrame)):
+        return obj
+    if isinstance(obj, pd.Series):
+        return obj.to_frame()
+    # polars, pyarrow.Table, duckdb relations, Ibis, BigQuery RowIterator.
+    for name in ("to_arrow", "arrow"):
+        method = getattr(obj, name, None)
+        if callable(method):
+            try:
+                return method().to_pandas()
+            except Exception:
+                break
+    # BigQuery calls it to_dataframe; most everything else to_pandas.
+    for name in ("to_pandas", "to_dataframe", "to_df"):
+        method = getattr(obj, name, None)
+        if callable(method):
+            try:
+                result = method()
+            except Exception:
+                break
+            if isinstance(result, pd.DataFrame):
+                return result
+    if hasattr(obj, "__dataframe__"):
+        try:
+            return pd.api.interchange.from_dataframe(obj)
+        except Exception:
+            pass
+    # A dict of columns, or a list of row dicts.
+    if isinstance(obj, dict) and obj:
+        try:
+            return pd.DataFrame(obj)
+        except Exception:
+            return None
+    if isinstance(obj, (list, tuple)) and obj and isinstance(obj[0], dict):
+        try:
+            return pd.DataFrame(list(obj))
+        except Exception:
+            return None
+    return None
+
+
 class Pond:
     def __init__(
         self,
-        source: Path | pd.DataFrame | gpd.GeoDataFrame,
+        source: Path | str | pd.DataFrame | gpd.GeoDataFrame | Any,
         handler: Optional[Callable] = None,
         data_format: Optional[str] = None,
     ):
@@ -236,8 +296,9 @@ class Pond:
                     return pd.DataFrame(), True, str(source)
             return raw, False, None
 
-        if isinstance(source, (pd.DataFrame, gpd.GeoDataFrame)):
-            raw = source
+        frame = _to_frame(source)
+        if frame is not None:
+            raw = frame
             if handler:
                 try:
                     output = handler(raw)
@@ -247,7 +308,14 @@ class Pond:
             else:
                 output = raw
         else:
-            print("Invalid source type. Must be filepath or DataFrame.")
+            print(
+                f"Invalid source type {type(source).__name__!r}. Must be a "
+                f"filepath, or an object that can become a table: a pandas "
+                f"or Geo DataFrame, anything exposing to_arrow, to_pandas or "
+                f"to_dataframe, anything supporting the dataframe "
+                f"interchange protocol, a dict of columns, or a list of row "
+                f"dicts."
+            )
             return pd.DataFrame(), True, str(source)
 
         return output, False, None
