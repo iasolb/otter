@@ -8,6 +8,7 @@ import geopandas as gpd
 from functools import reduce
 import pickle
 
+from otter._where import filter_frame, filter_lazy, is_lazy
 
 @dataclass(frozen=True)
 class ModelSpec:
@@ -233,9 +234,16 @@ class Pond:
             Pond("regions.shp", data_format="shp")
             Pond(existing_df)
         """
-        self.data, self._load_failed, self._failed_source = self._load(
-            source, handler, data_format
-        )
+        # A duckdb relation stays in duckdb: `data` is pulled only when used,
+        # so create_pool(where=...) can fetch just the pool. A handler needs
+        # the whole table, so it takes the ordinary eager path.
+        self._lazy = source if handler is None and is_lazy(source) else None
+        if self._lazy is not None:
+            self._data, self._load_failed, self._failed_source = None, False, None
+        else:
+            self._data, self._load_failed, self._failed_source = self._load(
+                source, handler, data_format
+            )
         self.pool = None
         self.dependent = None
         self.independents = []
@@ -327,18 +335,42 @@ class Pond:
                 f"'{self._failed_source}' failed."
             )
 
-    def create_pool(self, condition: Callable) -> None:
+    @property
+    def data(self) -> Optional[pd.DataFrame]:
+        """The full table. From a lazy source it is materialised on first use."""
+        if self._data is None and self._lazy is not None:
+            self._data = self._lazy.df()
+        return self._data
+
+    @data.setter
+    def data(self, value: Optional[pd.DataFrame]) -> None:
+        self._data = value
+
+    def create_pool(
+        self, condition: Optional[Callable] = None, *, where: Optional[str] = None
+    ) -> None:
         """
         Example Usage:
 
             pond.create_pool(lambda df: df["age"] > 30)
             pond.create_pool(lambda df: df["country"].isin(["US", "UK"]))
+            pond.create_pool(where="state = 'MA' AND age > 30")
+
+        `where` is SQL text pushed to the backend (needs otter[duckdb]). From
+        a duckdb relation only the matching rows are ever pulled into memory.
         """
         self._raise_if_load_failed()
-        if self.data is not None:
+        if (condition is None) == (where is None):
+            raise ValueError("create_pool takes a condition or where=, exactly one")
+        if where is not None:
+            if self._lazy is not None:
+                self.pool = filter_lazy(self._lazy, where)
+            else:
+                self.pool = filter_frame(self.data, where)
+        elif self.data is not None:
             self.pool = self.data[condition(self.data)].copy()
         else:
-            print("No full dataset available")
+            print("No valid dataset available")
             return
         print(f"Pool created with {len(self.pool)} rows")
 
