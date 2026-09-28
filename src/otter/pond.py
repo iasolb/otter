@@ -370,7 +370,7 @@ class Pond:
         elif self.data is not None:
             self.pool = self.data[condition(self.data)].copy()
         else:
-            print("No valid dataset available")
+            print("No full dataset available")
             return
         print(f"Pool created with {len(self.pool)} rows")
 

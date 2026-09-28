@@ -32,6 +32,9 @@ dev = ["pytest>=7.0"]
 # simplejson into every install, five packages for a feature nobody is
 # required to use. Measured on the 0.1.0 install, 2026-09-11.
 plots = ["kaleido>=0.2"]
+# create_pool(where="...") runs SQL text through duckdb, pushed down to the
+# engine when the source is a duckdb relation. Optional: the callable form
+# needs nothing extra.
 duckdb = ["duckdb>=1.0"]
 
 [tool.setuptools.packages.find]
