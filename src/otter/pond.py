@@ -49,6 +49,22 @@ class ModelSpec:
             return (self.dependent,) + self.independents + self.controls
         return self.independents + self.controls
 
+    def to_numpy(self) -> tuple[np.ndarray, Optional[np.ndarray]]:
+        """The design matrix and the dependent as float numpy arrays.
+
+        Numpy is otter's compute type; the DataFrame stays the boundary. Columns
+        keep the spec's order, the arrays are copies (the spec is frozen), and y
+        is None when no dependent is set. A column that is not numeric raises
+        ValueError naming it, never a silent coercion.
+        """
+        bad = [str(c) for c in self.X.columns
+               if not pd.api.types.is_numeric_dtype(self.X[c])]
+        if bad:
+            raise ValueError(f"non-numeric column(s) in X: {', '.join(bad)}")
+        X = self.X.to_numpy(dtype=float, copy=True)
+        y = None if self.y is None else self.y.to_numpy(dtype=float, copy=True)
+        return X, y
+
     def __repr__(self) -> str:
         dep = self.dependent or "None"
         return (
@@ -57,6 +73,8 @@ class ModelSpec:
             f"independents={list(self.independents)}, "
             f"controls={list(self.controls)})"
         )
+
+    
 
 
 class PondLoadFailedError(RuntimeError):
