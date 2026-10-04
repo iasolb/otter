@@ -1,5 +1,6 @@
 """Pond - Supports data assignment and model customization"""
 
+import numpy as np
 import pandas as pd
 from typing import Optional, Callable, Any
 from pathlib import Path
