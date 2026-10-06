@@ -86,14 +86,17 @@ class TestCreatePoolWhere:
             pond.create_pool(where="age > 1")
 
     def test_the_duckdb_extra_is_declared(self) -> None:
-        import tomllib
+        # tomllib is stdlib only from 3.11; on 3.10 assert against the text.
         from pathlib import Path
 
-        meta = tomllib.loads(
-            (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text(encoding="utf-8")
-        )
-        extras = meta["project"]["optional-dependencies"]
-        assert any(req.startswith("duckdb") for req in extras.get("duckdb", []))
+        text = (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text(encoding="utf-8")
+        if sys.version_info >= (3, 11):
+            import tomllib
+
+            extras = tomllib.loads(text)["project"]["optional-dependencies"]
+            assert any(req.startswith("duckdb") for req in extras.get("duckdb", []))
+        else:
+            assert '\nduckdb = ["duckdb' in text
 
     def test_the_callable_form_still_works(self) -> None:
         pond = Pond(_frame())
