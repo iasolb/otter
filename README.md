@@ -18,34 +18,21 @@ subset, not `multiprocessing.Pool`.
 
 ## Installation
 
-Core dependencies:
-
 ```bash
-pip install pandas numpy geopandas
+pip install otter
 ```
 
-For the simulation module:
+That brings every dependency the package imports. Two optional extras:
 
 ```bash
-pip install scipy matplotlib
+pip install "otter[duckdb]"   # create_pool(where="...") runs SQL through duckdb
+pip install "otter[plots]"    # kaleido, for plotly's static image export
 ```
 
-For running the example workflows:
+From a checkout, with the test dependencies:
 
 ```bash
-pip install statsmodels scikit-learn
-```
-
-For running the tests:
-
-```bash
-pip install pytest
-```
-
-Or install everything at once:
-
-```bash
-pip install -r requirements.txt
+pip install -e ".[dev]"
 ```
 
 ## Quick Start
