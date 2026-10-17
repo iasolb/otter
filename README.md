@@ -530,8 +530,11 @@ sim.engine                  # MonteCarloEngine
 sim.input_manager           # InputManager
 sim.sensitivity             # SensitivityAnalyzer
 sim.convergence             # ConvergenceDiagnostics (class reference)
-sim.plot                    # SimulationPlotter
 ```
+
+Plotting is not on the facade: it lives in `SimulationPlotter` (see
+[Plotting](#plotting)), so the simulation engine carries no plotting
+dependency.
 
 ### `Simulation.from_spec(spec, model, *, dist_type, overrides, include_dependent, ...)`
 
@@ -640,17 +643,24 @@ snapshots = sim.engine.run_convergence()
 
 ### Plotting
 
-All plot methods return matplotlib `Figure` objects. Accessed via `sim.plot`
-or `SimulationPlotter` directly.
+Every plot method is a static method on `SimulationPlotter` and returns a
+plotly `Figure`. There is no `sim.plot`: call the methods on the class, no
+instance needed.
 
 ```python
-fig = sim.plot.histogram(result)                        # distribution with CI shading
-fig = sim.plot.cumulative_density(result)               # empirical CDF with percentile markers
-fig = sim.plot.convergence_plot(result.outcomes)         # running mean ± SE
-fig = sim.plot.tornado_chart(tornado_data)               # sensitivity swings
-fig = sim.plot.scenario_comparison(scenario_results)     # overlaid KDE curves
+from otter import SimulationPlotter
 
-fig.savefig("output.png", dpi=150)
+fig = SimulationPlotter.histogram(result)                         # distribution with CI shading
+fig = SimulationPlotter.cumulative_density(result)                # empirical CDF with percentile markers
+fig = SimulationPlotter.convergence_plot(result.outcomes)         # running mean ± SE
+fig = SimulationPlotter.tornado_chart(tornado)                    # sensitivity swings
+fig = SimulationPlotter.scenario_comparison(results)              # overlaid KDE curves
+fig = SimulationPlotter.histogram_comparison(results)             # overlaid histograms
+fig = SimulationPlotter.tornado_comparison([t1, t2], ["a", "b"])  # side-by-side tornados
+
+fig.show()                              # interactive
+fig.write_html("output.html")           # standalone page, no extra install
+fig.write_image("output.png", scale=2)  # static image, needs otter[plots] (kaleido)
 ```
 
 ### Supported Distributions
@@ -763,7 +773,7 @@ Simulate a VC portfolio's 3-year value under uncertainty about growth,
 churn, market multiples, and discount rates.
 
 ```python
-from otter import Simulation, DistributionSpec, Scenario
+from otter import Simulation, DistributionSpec, Scenario, SimulationPlotter
 
 def portfolio_value(row):
     base_arr = 33.0 * 12
@@ -792,9 +802,9 @@ results = sim.compare_scenarios([
     Scenario("bear", overrides={"revenue_multiple": {"left": 2, "mode": 4, "right": 8}}),
 ])
 
-sim.plot.histogram(result).savefig("distribution.png")
-sim.plot.tornado_chart(tornado).savefig("tornado.png")
-sim.plot.scenario_comparison(results).savefig("scenarios.png")
+SimulationPlotter.histogram(result).write_html("distribution.html")
+SimulationPlotter.tornado_chart(tornado).write_html("tornado.html")
+SimulationPlotter.scenario_comparison(results).write_html("scenarios.html")
 ```
 
 ## Design Notes
