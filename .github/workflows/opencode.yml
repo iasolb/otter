@@ -1,0 +1,38 @@
+# The opencode agent: a comment containing /oc or /opencode on an issue or pull
+# request runs it here, on GitHub's runner, and it answers with a branch and a
+# pull request. Docs: https://opencode.ai/docs/github/ (read 2026-10-22).
+#
+# ONLY IAN'S COMMENTS START IT. The repository is public, so without the
+# author check any visitor could spend his opencode allowance.
+# The model is the only one his rules permit (opencode/gpt-5-nano).
+name: opencode
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+jobs:
+  opencode:
+    if: |
+      github.event.comment.user.login == 'iasolb' &&
+      (contains(github.event.comment.body, '/oc') ||
+       contains(github.event.comment.body, '/opencode'))
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Run opencode
+        uses: anomalyco/opencode/github@latest
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+        with:
+          model: opencode/gpt-5-nano
