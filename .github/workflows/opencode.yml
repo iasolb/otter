@@ -38,5 +38,6 @@ jobs:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           OPENCODE_GO_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
         with:
-          # 19,230 requests a month on Go; kimi-k3 allowed only 490 (opencode.ai/docs/go, 2026-10-23)
-          model: opencode-go/claude-haiku-5-5
+          # Ian, 2026-10-23: Luna on Go, nano on Zen. 21,130 requests a month on Go;
+          # kimi-k3 allowed only 490 (opencode.ai/docs/go, 2026-10-23)
+          model: opencode-go/gpt-6-luna
