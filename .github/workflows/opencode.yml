@@ -1,12 +1,14 @@
-# The opencode agent: a comment containing /oc or /opencode on an issue or pull
-# request runs it here, on GitHub's runner, and it answers with a branch and a
-# pull request. Docs: https://opencode.ai/docs/github/ (read 2026-10-22).
+# The opencode agent: a comment on an issue or pull request runs it here, on
+# GitHub's runner, and it answers with a branch and a pull request.
+# Docs: https://opencode.ai/docs/github/ (read 2026-10-22).
 #
-# ONLY IAN'S COMMENTS START IT. The repository is public, so without the
-# author check any visitor could spend his opencode allowance.
-# The model is a Go one (Ian, 2026-10-23: use the Go allowance he already paid
-# for, which does not roll over). Go and Zen share one key, passed under both
-# names because which one the opencode-go provider reads is unverified.
+# TWO TIERS, PICKED BY THE COMMENT (Ian, 2026-10-23: "Luna for Go, nano for
+# Zen", and never Luna on a task nano can do):
+#   /oc     small, mechanical, literal edits   opencode/gpt-5-nano   (Zen, pay per use)
+#   /oc-go  writing and judgement              opencode-go/gpt-6-luna (Go allowance)
+# Rule and limits: store:facts/model/github_agent_writes_on_go_claude_haiku.
+#
+# ONLY IAN'S COMMENTS START IT, so no visitor can spend his allowance.
 name: opencode
 
 on:
@@ -16,28 +18,42 @@ on:
     types: [created]
 
 jobs:
-  opencode:
+  nano:
     if: |
       github.event.comment.user.login == 'iasolb' &&
-      (contains(github.event.comment.body, '/oc') ||
-       contains(github.event.comment.body, '/opencode'))
+      contains(github.event.comment.body, '/oc') &&
+      !contains(github.event.comment.body, '/oc-go')
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 1
           persist-credentials: false
+      - uses: anomalyco/opencode/github@latest
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+        with:
+          model: opencode/gpt-5-nano
 
-      - name: Run opencode
-        uses: anomalyco/opencode/github@latest
+  luna:
+    if: |
+      github.event.comment.user.login == 'iasolb' &&
+      contains(github.event.comment.body, '/oc-go')
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: anomalyco/opencode/github@latest
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           OPENCODE_GO_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
         with:
-          # Ian, 2026-10-23: Luna on Go, nano on Zen. 21,130 requests a month on Go;
-          # kimi-k3 allowed only 490 (opencode.ai/docs/go, 2026-10-23)
           model: opencode-go/gpt-6-luna
