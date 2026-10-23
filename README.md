@@ -4,7 +4,7 @@ An econometrics and research-workflow library built on pandas.
 
 [![PyPI version](https://img.shields.io/pypi/v/otter)](https://pypi.org/project/otter/)
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/otter)](https://pypi.org/project/otter/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/iasolb/otter/blob/main/LICENSE)
 [![Tests](https://github.com/iasolb/otter/actions/workflows/tests.yml/badge.svg)](https://github.com/iasolb/otter/actions/workflows/tests.yml)
 
 ## Features
@@ -32,9 +32,8 @@ pip install "otter[plots]"    # kaleido, for plotly's static image export
 ## Quick Start
 
 ```python
-import numpy as np
 from otter import Pond
-from otter import mean_center, log_transform, z_score
+from otter import mean_center, log_transform
 
 def clean(df):
     df.columns = df.columns.str.lower().str.strip()
@@ -67,16 +66,6 @@ spec = pond.get_spec()
 
 ## Documentation
 
-The facade exposes sub-components directly:
-
-```python
-sim.engine
-sim.input_manager
-sim.sensitivity
-sim.convergence
-SimulationPlotter.histogram(result)
-```
-
 - [Documentation index](https://github.com/iasolb/otter/blob/main/docs/index.md)
 - [Pond API](https://github.com/iasolb/otter/blob/main/docs/pond.md)
 - [Transforms reference](https://github.com/iasolb/otter/blob/main/docs/transforms.md)
@@ -99,4 +88,4 @@ pytest
 
 ## License
 
-otter is licensed under the [MIT License](LICENSE).
+otter is licensed under the [MIT License](https://github.com/iasolb/otter/blob/main/LICENSE).
