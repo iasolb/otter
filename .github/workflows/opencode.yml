@@ -4,7 +4,9 @@
 #
 # ONLY IAN'S COMMENTS START IT. The repository is public, so without the
 # author check any visitor could spend his opencode allowance.
-# The model is the only one his rules permit (opencode/gpt-5-nano).
+# The model is a Go one (Ian, 2026-10-23: use the Go allowance he already paid
+# for, which does not roll over). Go and Zen share one key, passed under both
+# names because which one the opencode-go provider reads is unverified.
 name: opencode
 
 on:
@@ -34,5 +36,6 @@ jobs:
         uses: anomalyco/opencode/github@latest
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          OPENCODE_GO_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
         with:
-          model: opencode/gpt-5-nano
+          model: opencode-go/kimi-k3
