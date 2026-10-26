@@ -26,7 +26,7 @@ class ModelSpec:
         dependent:     dependent variable column name (None if not set)
         source_label:  "full" or "pool" — which dataset the variables came from
         n:             number of observations
-        data:          copy of the source DataFrame (for distribution fitting)
+        data:          copy of spec columns from source (for distribution fitting)
     """
 
     X: pd.DataFrame
@@ -562,8 +562,8 @@ class Pond:
         Return a frozen snapshot of the current variable specification.
 
         The ModelSpec contains copies of the design matrix, dependent variable,
-        column name metadata, and the source DataFrame (for distribution fitting
-        in the simulation module).
+        column name metadata, and the spec's columns from the source DataFrame
+        (for distribution fitting in the simulation module).
 
         Raises:
             RuntimeError: if no independents have been set
@@ -590,15 +590,24 @@ class Pond:
         else:
             source_df = self.data
 
+        source_data = pd.DataFrame(source_df)
+        dependent = str(self.dependent.name) if self.dependent is not None else None
+        spec_columns = (
+            ((dependent,) if dependent is not None else ())
+            + tuple(s.name for s in self.independents)
+            + tuple(s.name for s in self.controls)
+        )
+        data_columns = [col for col in spec_columns if col in source_data.columns]
+
         return ModelSpec(
             X=X.copy(),
             y=y.copy() if y is not None else None,
             independents=tuple(s.name for s in self.independents),
             controls=tuple(s.name for s in self.controls),
-            dependent=str(self.dependent.name if self.dependent is not None else None),
+            dependent=dependent,
             source_label=self._source_mode or "full",
             n=len(X),
-            data=pd.DataFrame(source_df).copy(),
+            data=source_data.loc[:, data_columns].copy(),
         )
 
     def reset_pool(self) -> None:

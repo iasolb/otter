@@ -181,6 +181,31 @@ class TestVariables:
         assert pond.controls == []
 
 
+class TestModelSpec:
+    def test_spec_data_contains_only_columns_in_spec_order(self):
+        data = pd.DataFrame(
+            {"a": [1, 2], "b": [3, 4], "c": [5, 6], "d": [7, 8]}
+        )
+        pond = Pond(data)
+        pond.set_dependent("a")
+        pond.add_independents("b")
+        pond.add_controls("c")
+
+        spec = pond.get_spec()
+
+        assert list(spec.data.columns) == ["a", "b", "c"]
+        assert "d" not in spec.data.columns
+
+    def test_spec_without_dependent_has_no_none_column(self):
+        pond = Pond(pd.DataFrame({"b": [3, 4]}))
+        pond.add_independents("b")
+
+        spec = pond.get_spec()
+
+        assert spec.dependent is None
+        assert "None" not in spec.all_columns
+
+
 # ---------------------------------------------------------------------------
 # Attach tests
 # ---------------------------------------------------------------------------
