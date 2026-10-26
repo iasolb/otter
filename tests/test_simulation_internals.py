@@ -23,7 +23,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from otter.pond import ModelSpec
+from otter.pond import ModelSpec, Pond
 from otter.simulation import (
     _DISTRIBUTION_REGISTRY,
     ConvergenceDiagnostics,
@@ -535,6 +535,25 @@ def _spec(n=400):
 def test_from_spec_fits_the_independents_and_controls():
     sim = Simulation.from_spec(_spec(), model=lambda row: row["x"] + row["c"], n_iterations=200)
     assert set(sim.input_manager.variable_names) == {"x", "c"}
+    assert sim.run().mean is not None
+
+
+def test_from_spec_works_with_a_spec_built_from_a_pond():
+    data = pd.DataFrame(
+        {
+            "y": [2.0, 4.0, 6.0, 8.0],
+            "x": [1.0, 2.0, 3.0, 4.0],
+            "unused": [10.0, 20.0, 30.0, 40.0],
+        }
+    )
+    pond = Pond(data)
+    pond.set_dependent("y")
+    pond.add_independents("x")
+
+    sim = Simulation.from_spec(
+        pond.get_spec(), model=lambda row: row["x"], n_iterations=100, seed=21
+    )
+
     assert sim.run().mean is not None
 
 
